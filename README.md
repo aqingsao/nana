@@ -17,9 +17,23 @@ And here is an example of the log file:
  As '$remote_addr' is extracted as column 10 in awk,`$body_bytes_sent` as column 10 and `$request_time` as column 11.
  
 ## 1. Usage
-`./analyze.sh <logfile> [timeLimitInSeconds]`
+`./nanalyze.sh <logfile> [timeLimitInSeconds]`
 
 Where <logfile> is the absolute location of nginx log file; [timeLImitInSeconds] is optional with a default value of 3 seconds
 
 For example: 
-`./analyze.sh /var/log/nginx/main.log`
+`./nanalyze.sh /var/log/nginx/main.log`
+
+And here is an exmample output
+`---------nginx summary---------
+requests: total 78970, slow 178
+unique ip: total 4229, slow 53
+time: average 0.205734s, max 73.528s
+traffic: total 1158.1MB, max 1417.18KB, average 72.9927KB/req
+rate: average 4186.4KB/s, max 757.32KB/s, min 0KB/s
+`
+
+## 2. TBD
+* List requests that have a lower response time than specific value
+* List requests that have a bigger response size than specific value
+* Analyze and alert when nginx or app is slow(note that sometimes user has a poor network bandwith on mobile phones)
