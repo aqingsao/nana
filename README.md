@@ -1,28 +1,26 @@
-# nginx-log-analyzer
-A tool written in shell and awk to analyze performance bottleneck for nginx. So far the following metrics are extracted:
-* Requests count
-* Unique ip count
-* Total bytes transfered and average bytes per erquest
-* transfer rate
-* Requests count and unique ip count that response time is longer than specified limit(3 seconds in default)
+# About nana
+Nana is an Nginx log analyzer to identify performance bottlenecks. It's written in shell and awk, aiming to be the best Nginx log analyzer.
 
-## 0. Assumptions
-It's assumed that your Nginx log file is in the following format:
-`'$remote_addr - $remote_user [$time_local] "$request" '
-                      '$status $body_bytes_sent $request_time $upstream_response_time "$http_referer" '
-                      '"$http_user_agent" "$http_x_forwarded_for"';`
-And here is an example of the log file:
-`183.63.28.26 - - [21/Mar/2016:03:53:41 +0800] "GET /weshares/index.html HTTP/1.1" 200 100759 0.255 0.105 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13B143" "-"`
+So far the following metrics are extracted:
+#### Nginx summary
+- count of requests and unique ip addresses;
+- count of slow requests;
+- Total bytes, average bytes per request and transfer rate
 
- As '$remote_addr' is extracted as column 10 in awk,`$body_bytes_sent` as column 10 and `$request_time` as column 11.
+#### Slow requests
+- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
+
+#### Peak requests(TBD)
+
+#### Mostly visited urls(TBD)
  
-## 1. Usage
-`./nanalyze.sh <logfile> [timeLimitInSeconds]`
+# Usages
+`./nana.sh <logfile> [timeLimitInSeconds]`
 
 Where <logfile> is the absolute location of nginx log file; [timeLImitInSeconds] is optional with a default value of 3 seconds
 
 For example: 
-`./nanalyze.sh /var/log/nginx/main.log`
+`./nana.sh /var/log/nginx/main.log`
 
 And here is an exmample output
 `---------nginx summary---------
@@ -31,9 +29,35 @@ unique ip: total 4229, slow 53
 time: average 0.205734s, max 73.528s
 traffic: total 1158.1MB, max 1417.18KB, average 72.9927KB/req
 rate: average 4186.4KB/s, max 757.32KB/s, min 0KB/s
+
+---------slow summary---------
+58.244.**.** - - [22/Mar/2016:14:43:17 +0800] "GET /url HTTP/1.1" 200 28 5.801 5.801 "http://host/url1" "Mozilla/5.0 (iPhone; CPU iPhone OS 9_2_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13D15" "-"
+117.136.**.** - - [22/Mar/2016:14:43:17 +0800] "GET /url HTTP/1.1" 200 95888 6.686 6.686 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70" "-"
 `
 
-## 2. TBD
-* List requests that have a lower response time than specific value
-* List requests that have a bigger response size than specific value
-* Analyze and alert when nginx or app is slow(note that sometimes user has a poor network bandwith on mobile phones)
+# FAQ
+
+#### How to identify requests that are really slow?
+In general there are 3 types of slow requests:
+1. Slow reponse from upstream servers;
+2. Limited bandwith of physical servers;
+3. Poor network condition of mobile phones.
+
+From data of my site, **about 0.5% requests** are slow because of poor network condition, which should be avoided from alerting. This tool identifies a request as slow only if 8 out of 10 succedding requests are slow.
+
+#### Print nothing?
+Please check log_format of http module in your nginx configurations file(/etc/nginx/nginx.conf), which should be in the following format:
+
+`
+'$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent $request_time $upstream_response_time "$http_referer" "$http_user_agent" "$http_x_forwarded_for"';
+
+// Example: 
+183.63.**.** - - [21/Mar/2016:03:53:41 +0800] "GET /url HTTP/1.1" 200 100759 0.255 0.105 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13B143" "-"
+`
+
+You could use awk to check whether it works:
+`
+less /var/log/ngin/main.log | awk '{print $1}' | head -n 1 // should print ip address
+less /var/log/ngin/main.log | awk '{print $10}' | head -n 1 // should print size of reponse body
+less /var/log/ngin/main.log | awk '{print $11}' | head -n 1 // should print request time
+`
