@@ -29,6 +29,11 @@ echo "time: average ${resTimeAverage}s, max ${maxTimeOfRes}s"
 echo "traffic: total ${bytesTotalInM}MB, max ${maxBytesInK}KB, average ${bytesAverageInK}KB/req"
 echo "rate: average ${rateInK}KB/s, max ${maxRateInK}KB/s, min${minRateInK}KB/s"
 
+
+echo "---------peak time---------"
+# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
+less $file | awk '{reqsPerSec[$4]++} END{for(i in reqsPerSec){printf("%s %s\n", reqsPerSec[i], i)}}' | sort -nr | head -n 10
+
 echo "---------slow queries---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
 less $file | awk -v limit=$seconds '{lines[NR]=$0;time[NR]=$11;slowCount=0;if($11 >= limit && NR >= 10){for(i = 10; i >=0; i--){if(time[NR-i] >= limit){slowCount++}; }}; if(slowCount >=6 ){for(i = 10; i >=0; i--){print lines[NR-i]}}}'

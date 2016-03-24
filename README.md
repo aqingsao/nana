@@ -1,7 +1,7 @@
 # About nana
 Nana is an Nginx log analyzer to identify performance bottlenecks. It's written in shell and awk, aiming to be the best Nginx log analyzer.
 
-So far the following metrics are extracted:
+So far the following metrics are collected:
 #### Nginx summary
 - count of requests and unique ip addresses;
 - count of slow requests;
@@ -10,7 +10,8 @@ So far the following metrics are extracted:
 #### Slow requests
 - List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 
-#### Peak requests(TBD)
+#### Peak time
+- List top 10 peak time that has highest requests per second
 
 #### Mostly visited urls(TBD)
  
