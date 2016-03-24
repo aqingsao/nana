@@ -11,9 +11,10 @@ So far the following metrics are collected:
 - List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 
 #### Peak time
-- List top 10 peak time that has highest requests per second
+- List top 10 moments that have highest requests per second
 
-#### Mostly visited urls(TBD)
+#### Hot urls
+- List top 10 urls that have top visits
  
 # Usages
 `./nana.sh <logfile> [timeLimitInSeconds]`
