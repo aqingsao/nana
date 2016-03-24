@@ -24,17 +24,22 @@ Where <logfile> is the absolute location of nginx log file; [timeLImitInSeconds]
 For example: 
 `./nana.sh /var/log/nginx/main.log`
 
-And here is an exmample output
-`---------nginx summary---------
-requests: total 78970, slow 178
-unique ip: total 4229, slow 53
-time: average 0.205734s, max 73.528s
-traffic: total 1158.1MB, max 1417.18KB, average 72.9927KB/req
-rate: average 4186.4KB/s, max 757.32KB/s, min 0KB/s
+And here is an exmample output: 
 
----------slow summary---------
-58.244.**.** - - [22/Mar/2016:14:43:17 +0800] "GET /url HTTP/1.1" 200 28 5.801 5.801 "http://host/url1" "Mozilla/5.0 (iPhone; CPU iPhone OS 9_2_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13D15" "-"
-117.136.**.** - - [22/Mar/2016:14:43:17 +0800] "GET /url HTTP/1.1" 200 95888 6.686 6.686 "-" "Mozilla/5.0 (iPhone; CPU iPhone OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Mobile/12F70" "-"
+`---------nginx summary---------  
+requests: total 78970, slow 178, peak 350/s  
+unique ip: total 4229, slow 53  
+time: average 0.205734s, max 73.528s  
+traffic: total 1158.1MB, max 1417.18KB, average 72.9927KB/req  
+rate: average 4186.4KB/s, max 757.32KB/s, min 0KB/s  
+
+---------Peak moments---------  
+...  
+---------Hot urls---------  
+...  
+---------slow summary---------  
+58.244.**.** - - [22/Mar/2016:14:43:17 +0800] "GET /url HTTP/1.1" 200 28 5.801 5.801 "http://host/url1" "Mozilla/5.0 (iPhone; CPU iPhone OS 9_2_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Mobile/13D15" "-"  
+...  
 `
 
 # FAQ
@@ -59,7 +64,9 @@ Please check log_format of http module in your nginx configurations file(/etc/ng
 
 You could use awk to check whether it works:
 `
-less /var/log/ngin/main.log | awk '{print $1}' | head -n 1 // should print ip address
-less /var/log/ngin/main.log | awk '{print $10}' | head -n 1 // should print size of reponse body
-less /var/log/ngin/main.log | awk '{print $11}' | head -n 1 // should print request time
+less /var/log/ngin/main.log | awk '{print $1}' | head -n 1 // should print ip addresses  
+less /var/log/ngin/main.log | awk '{print $4}' | head -n 1 // should print timestamps  
+less /var/log/ngin/main.log | awk '{print $7}' | head -n 1 // should print urls  
+less /var/log/ngin/main.log | awk '{print $10}' | head -n 1 // should print size of reponse body  
+less /var/log/ngin/main.log | awk '{print $11}' | head -n 1 // should print request time  
 `
