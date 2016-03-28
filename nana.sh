@@ -33,9 +33,13 @@ echo "---------peak moments---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
 less $file | awk '{reqsPerSec[$4]++} END{for(i in reqsPerSec){printf("%s %s\n", reqsPerSec[i], i)}}' | sort -nr | head -n 10
 
-echo "---------Hot urls(count, url, size)---------"
+echo "---------Hot urls(request count, urls, size per request)---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %s\n", urls[i], i, bytes[i] / urls[i])}}' | sort -nr | head -n 10
+less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %sKB\n", urls[i], i, bytes[i] / urls[i] / 1024)}}' | sort -nr | head -n 10
+
+echo "---------Large responses(total size, requests count, size per request, url)---------"
+# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
+less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %s\n", bytes[i], urls[i], i)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %s %sKB %s\n", $1 / 1024 / 1024, $2, $1/$2 / 1024,$3)}'
 
 echo "---------slow queries---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
