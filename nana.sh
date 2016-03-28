@@ -33,9 +33,9 @@ echo "---------peak moments---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
 less $file | awk '{reqsPerSec[$4]++} END{for(i in reqsPerSec){printf("%s %s\n", reqsPerSec[i], i)}}' | sort -nr | head -n 10
 
-echo "---------Hot urls---------"
+echo "---------Hot urls(count, url, size)---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk '{print $7}' | awk -F '?' '{urls[$1]++} END{for(i in urls){printf("%s %s\n", urls[i], i)}}' | sort -nr | head -n 10
+less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %s\n", urls[i], i, bytes[i] / urls[i])}}' | sort -nr | head -n 10
 
 echo "---------slow queries---------"
 # 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
