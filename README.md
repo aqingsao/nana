@@ -7,14 +7,21 @@ So far the following metrics are collected:
 - count of slow requests;
 - Total bytes, average bytes per request and transfer rate
 
+#### Busy moments
+- List top 10 moments that are visited most frequently
+
+#### Hot urls
+- List top 10 urls that are mostly visited
+
+#### Large urls
+- List top 10 urls that have largest response size
+
+#### Slow urls
+- List top 10 urls that have largest response time
+
 #### Slow requests
 - List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 
-#### Peak time
-- List top 10 moments that have highest requests per second
-
-#### Hot urls
-- List top 10 urls that have top visits
  
 # Usages
 `./nana.sh <logfile> [timeLimitInSeconds]`

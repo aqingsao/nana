@@ -29,18 +29,21 @@ echo "time: average ${resTimeAverage}s, max ${maxTimeOfRes}s"
 echo "traffic: total ${bytesTotalInM}MB, max ${maxBytesInK}KB, average ${bytesAverageInK}KB/req"
 echo "rate: average ${rateInK}KB/s, max ${maxRateInK}KB/s, min${minRateInK}KB/s"
 
-echo "---------peak moments(request count, reponse sizes, moment)---------"
-# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk '{reqsPerSec[$4]++; bytes[$4]+=$10} END{for(i in reqsPerSec){printf("%s %sKB %s\n", reqsPerSec[i], bytes[i] / 1024, i)}}' | sort -nr | head -n 10
+echo "---------Busy moments---------"
+echo "Request Count \t Total Bytes \t Time Spent/req \t Moment \t"
+less $file | awk '{requests[$4]++; bytes[$4]+=$10; times[$4]+=$11;} END{for(i in requests){printf("%s %sKB %s %s\n", requests[i], bytes[i] / 1024, times[i]/requests[i], i)}}' | sort -nr | head -n 10
 
-echo "---------Hot urls(request count, urls, page size)---------"
-# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %sKB\n", urls[i], i, bytes[i] / urls[i] / 1024)}}' | sort -nr | head -n 10
+echo "---------Hot urls---------"
+echo "Request count \t Page Size/req \t url \t"
+less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{requests[$2]++;bytes[$2]+=$1} END{for(i in requests){printf("%s %sKB %s\n", requests[i], bytes[i] / requests[i] / 1024, i)}}' | sort -nr | head -n 10
 
-echo "---------Large responses(total size, requests count, page size, url)---------"
-# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{urls[$2]++;bytes[$2]+=$1} END{for(i in urls){printf("%s %s %s\n", bytes[i], urls[i], i)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %s %sKB %s\n", $1 / 1024 / 1024, $2, $1/$2 / 1024,$3)}'
+echo "---------Large urls---------"
+echo "Total Size \t Page Size/req \t requests count \t url"
+less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{requests[$2]++;bytes[$2]+=$1} END{for(i in requests){printf("%sMB %sKB %s %s\n", bytes[i] / 1024 / 1024, bytes[i] /requests[i] / 1024, requests[i], i)}}' | sort -nr | head -n 10
+
+echo "---------Slow urls---------"
+echo "Total Time \t Response Time/req \t requests count \t url"
+less $file | awk '{printf("%s?%s\n", $11,$7)}' | awk -F '?' '{requests[$2]++;times[$2]+=$1} END{for(i in requests){printf("%ss %ss %s %s\n", times[i], times[i] /requests[i], requests[i], i)}}' | sort -nr | head -n 10
 
 echo "---------slow queries---------"
-# 60.000 - 111.161.114.249 [22/Mar/2016:17:35:00 /js/thickbox.js?v1 200 6453 "Mozilla/5.0 (iPhone; CPU
-less $file | awk -v limit=$seconds '{lines[NR]=$0;time[NR]=$11;slowCount=0;if($11 >= limit && NR >= 10){for(i = 10; i >=0; i--){if(time[NR-i] >= limit){slowCount++}; }}; if(slowCount >=6 ){for(i = 10; i >=0; i--){print lines[NR-i]}}}'
+less $file | awk -v limit=$seconds '{lines[NR]=$0;time[NR]=$11;slowCount=0;if($11 >= limit && NR >= 10){for(i = 10; i >=0; i--){if(time[NR-i] >= limit){slowCount++}; }}; if(slowCount >=6 ){for(i = 10; i >=0; i--){print lines[NR-i]}}}' | more
