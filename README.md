@@ -49,6 +49,10 @@ rate: average 4186.4KB/s, max 757.32KB/s, min 0KB/s
 ...  
 `
 
+# TODO List
+- Show urls that has longest average response time
+- List 500/404 pages
+
 # FAQ
 
 #### How to identify requests that are really slow?
