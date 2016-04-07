@@ -1,16 +1,35 @@
 #!/bin/sh
 
+function printHelp()
+{
+    echo "Usage:"
+    echo "-h: usage"
+    echo "-c: request count(peak request count by seconds and by minutes)"
+    echo "-r: traffic rate(By seconds and by minutes)"
+    echo "-u: urls(top visited urls)"
+    echo "-s: response size(top 10 largest response size per url)"
+    echo "-t: response time"
+    echo "-i: ip addresses"
+    echo "-r: traffic rate(by seconds and minutes)"
+    echo "-q: slow queries(over 3 seconds for 8 out of 10 continuous requests)"
+    echo ""
+}
+
 showUrls=0
 showRequestCount=0
 showResponseSize=0
 showResponseTime=0
 showIp=0
+showTrafficRate=0
 showSlowQueries=0
-while getopts ":custiq:" optname
+while getopts ":crustiqh" optname
   do
     case "$optname" in
       "c")
         showRequestCount=1
+        ;;
+      "r")
+        showTrafficRate=1
         ;;
       "u")
         showUrls=1
@@ -27,20 +46,18 @@ while getopts ":custiq:" optname
       "q")
         showSlowQueries=1
         ;;
-      :) 
-        echo "Use the following params to show details:"
-        echo "-c: request count(peak request count by seconds and by minutes)"
-        echo "-u: urls(top visited urls)"
-        echo "-s: response size(top 10 largest response size per url)"
-        echo "-t: response time"
-        echo "-i: ip addresses"
-        echo "-q: slow queries(over 3 seconds for 8 out of 10 continuous requests)"
-        echo ""
+      "h")
+        printHelp
         exit 1
         ;;
-      *)
-      # Should not occur
-        echo "Unknown error while processing options"
+      *) 
+        printHelp
+        exit 1
+        ;;
+      \?) 
+        echo "Invalid option -$OPTARG"
+        printHelp
+        exit 1
         ;;
     esac
   done
@@ -73,12 +90,24 @@ echo ""
 if [ "${showRequestCount}" = "1" ]; then
     echo "---------Request Count(By Seconds)---------"
     echo "Request Count \t Response Size \t Time Spent/req \t Moment \t"
-    less $file | awk '{requests[$4]++; bytes[$4]+=$10; times[$4]+=$11;} END{for(s in requests){printf("%s %sKB %s %s\n", requests[s], bytes[s] / 1024, times[s]/requests[s], s)}}' | sort -nr | head -n 10
+    less $file | awk '{second=$4;requests[second]++; bytes[second]+=$10; times[second]+=$11;} END{for(s in requests){printf("%s %sKB %s %s\n", requests[s], bytes[s] / 1024, times[s]/requests[s], s)}}' | sort -nr | head -n 10
     echo "---------Request Count(By Minutes)---------"
     echo "Request Count \t Total Bytes \t Time Spent/req \t Moment \t"
     less $file | awk '{minute = substr($4, 1, 18); requests[minute]++; bytes[minute]+=$10; times[minute]+=$11;} END{for(m in requests){printf("%s %sMB %ss %s\n", requests[m], bytes[m] / 1024 / 1024, times[m]/requests[m], m)}}' | sort -nr | head -n 10
     echo ""
 fi
+
+# -r
+if [ "${showTrafficRate}" = "1" ]; then
+    echo "---------Traffic Rate(By Seconds)---------"
+    echo "Traffic Total \t Traffic Rate \t Moment \t"
+    less $file | awk '{second=$4;bytes[second]+=$10;} END{for(s in bytes){printf("%s %s\n", bytes[s], s)}}' | sort -nr | head -n 10 | awk '{printf("%sKB %sKB %s\n", $1 / 1024, $1 / 1024, $2)}'
+    echo "---------Traffic Rate(By Minutes)---------"
+    echo "Traffic Total \t Traffic Rate \t Moment \t"
+    less $file | awk '{minute = substr($4, 1, 18); bytes[minute]+=$10;} END{for(m in bytes){printf("%s %s\n", bytes[m], m)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %sKB %s\n", $1 / 1024 / 1024, $1 / 1024, $2)}'
+    echo ""
+fi
+
 
 # -u
 if [ "${showUrls}" = "1" ]; then
@@ -119,17 +148,17 @@ fi
 
 # -i
 if [ "${showIp}" = "1" ]; then
-    echo "---------Ip Addresses---------"
+    echo "---------Ip Addresses(visit times)---------"
     ipCount=`less $file | awk '{print $1}' | sort | uniq | wc -l`
     echo "${ipCount} unique ip addresses"
-    echo "requests count \t Ip address"
+    echo "Requests count \t Ip address"
     less $file | awk '{requests[$1]++} END{for(ip in requests){printf("%s %s\n", requests[ip], ip)}}' | sort -nr | head -n 10
     echo ""
 fi
 
 # -q
 if [ "${showSlowQueries}" = "1" ]; then
-    echo "\n---------slow queries(>=3 seconds for 8 out of 10 times)---------"
+    echo "\n---------slow queries(over 3 seconds for 8 out of 10 continuous requests)---------"
     less $file | awk -v limit=3 '{lines[NR]=$0;time[NR]=$11;slowCount=0;if($11 >= limit && NR >= 10){for(i = 10; i >=0; i--){if(time[NR-i] >= limit){slowCount++}; }}; if(slowCount >=6 ){for(i = 10; i >=0; i--){print lines[NR-i]}}}' | more
     echo ""
 fi
