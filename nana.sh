@@ -4,6 +4,7 @@ function printHelp()
 {
     echo "Usage:"
     echo "-h: usage"
+    echo "-a: show all details(combination of c/r/u/s/t/i/r/q...)"
     echo "-c: request count(peak request count by seconds and by minutes)"
     echo "-r: traffic rate(By seconds and by minutes)"
     echo "-u: urls(top visited urls)"
@@ -44,6 +45,15 @@ while getopts ":crustiqh" optname
         showIp=1
         ;;
       "q")
+        showSlowQueries=1
+        ;;
+      "a")
+        showUrls=1
+        showRequestCount=
+        showResponseSize=1
+        showResponseTime=1
+        showIp=1
+        showTrafficRate=1
         showSlowQueries=1
         ;;
       "h")
@@ -104,14 +114,14 @@ if [ "${showTrafficRate}" = "1" ]; then
     less $file | awk '{second=$4;bytes[second]+=$10;} END{for(s in bytes){printf("%s %s\n", bytes[s], s)}}' | sort -nr | head -n 10 | awk '{printf("%sKB %sKB %s\n", $1 / 1024, $1 / 1024, $2)}'
     echo "---------Traffic Rate(By Minutes)---------"
     echo "Traffic Total \t Traffic Rate \t Moment \t"
-    less $file | awk '{minute = substr($4, 1, 18); bytes[minute]+=$10;} END{for(m in bytes){printf("%s %s\n", bytes[m], m)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %sKB %s\n", $1 / 1024 / 1024, $1 / 1024, $2)}'
+    less $file | awk '{minute = substr($4, 1, 18); bytes[minute]+=$10;} END{for(m in bytes){printf("%s %s\n", bytes[m], m)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %sKB %s\n", $1 / 1024 / 1024, $1 / 60 / 1024, $2)}'
     echo ""
 fi
 
 
 # -u
 if [ "${showUrls}" = "1" ]; then
-    echo "\n---------Top visited urls---------"
+    echo "---------Top visited urls---------"
     echo "Request count \t Page Size/req \t url \t"
     less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{requests[$2]++;bytes[$2]+=$1} END{for(i in requests){printf("%s %sKB %s\n", requests[i], bytes[i] / requests[i] / 1024, i)}}' | sort -nr | head -n 10
     echo ""
