@@ -9,6 +9,7 @@ function printHelp()
     echo "-r: traffic rate"
     echo "-t: response time"
     echo "-c: response code"
+    echo ""
     echo "-i: ip addresses"
     echo "-s: slow queries(over 3 seconds for 8 out of 10 continuous requests)"
     echo ""
@@ -19,17 +20,33 @@ showPageVisits=0
 showTrafficRate=0
 showResponseTime=0
 showResponseCode=0
+showUpstreamServers=0
 showIp=0
 showSlowQueries=0
-while getopts ":hacprist" optname
+while getopts ":hacprusti" optname
   do
-    echo "$optname"
     case "$optname" in
+      "h")
+        printHelp
+        exit 1
+        ;;
+      "a")
+        showPageVisits=1
+        showTrafficRate=1
+        showResponseTime=1
+        showIp=1
+        showSlowQueries=1
+        showResponseCode=1
+        showUpstreamServers=1
+        ;;
       "p")
         showPageVisits=1
         ;;
       "r")
         showTrafficRate=1
+        ;;
+      "u")
+        showUpstreamServers=1
         ;;
       "t")
         showResponseTime=1
@@ -42,18 +59,6 @@ while getopts ":hacprist" optname
         ;;
       "c")
         showResponseCode=1
-        ;;
-      "a")
-        showPageVisits=1
-        showTrafficRate=1
-        showResponseTime=1
-        showIp=1
-        showSlowQueries=1
-        showResponseCode=1
-        ;;
-      "h")
-        printHelp
-        exit 1
         ;;
       *) 
         printHelp
@@ -220,6 +225,19 @@ if [ "${showResponseCode}" = "1" ]; then
     echo "Requests count \t url"
     less $file | awk '{split($7,urls,"?"); url=urls[1];code=$9;if(code>=500 && code<600){codes[url]++};} END{for(u in codes){printf("%s %s\n", codes[u], u)}}' | sort -nr | head -n 10
     echo "---------End of Reponse Time Details---------"
+fi
+
+# -u
+if [ "${showUpstreamServers}" = "1" ]; then
+    echo ""
+    echo "---------Upstream Server Details---------"
+    echo "---------By Requesting Count"
+    echo "Request Count/ Percentage/ Response Time/req \t upstream server"
+    less $file | awk '{upServer=$13;upTime=$12;if(upServer == "-"){upServer="Nginx"};if(upTime == "-"){upTime=0};upTimes[upServer]+=upTime;count[upServer]++;totalCount++;} END{for(server in upTimes){printf("%s %s%s %ss %s\n", count[server], count[server]/totalCount * 100, "%", upTimes[server]/count[server], server)}}' | sort -nr | head -n 15
+
+    echo "---------Slow Responses"
+    echo "Upstream Response Time \t moment \t upstream server \t url"
+    less $file | awk -v limit=3 '{upServer=$13;upTime=$12;second=$4;url=$7;if(upTime > limit){printf("%ss %s %s %s\n", upTime, second, upServer, url)}}' | sort -nr | head -n 15
 fi
 
 # -i
