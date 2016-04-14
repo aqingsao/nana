@@ -8,6 +8,7 @@ function printHelp()
     echo "-p: page visits"
     echo "-r: traffic rate"
     echo "-t: response time"
+    echo "-c: response code"
     echo "-i: ip addresses"
     echo "-s: slow queries(over 3 seconds for 8 out of 10 continuous requests)"
     echo ""
@@ -17,9 +18,10 @@ showUrls=0
 showPageVisits=0
 showTrafficRate=0
 showResponseTime=0
+showResponseCode=0
 showIp=0
 showSlowQueries=0
-while getopts ":haprist" optname
+while getopts ":hacprist" optname
   do
     echo "$optname"
     case "$optname" in
@@ -38,12 +40,16 @@ while getopts ":haprist" optname
       "s")
         showSlowQueries=1
         ;;
+      "c")
+        showResponseCode=1
+        ;;
       "a")
         showPageVisits=1
         showTrafficRate=1
         showResponseTime=1
         showIp=1
         showSlowQueries=1
+        showResponseCode=1
         ;;
       "h")
         printHelp
@@ -79,12 +85,13 @@ slowIpCount=`less $file | awk -v limit="$seconds" '{if($11>limit){print $1}}' | 
 # m: max; a: average; c: count
 # S: second; U: url; R: request; T: total
 # 
-read countTotal avgCountByS maxCountS maxCountByS maxCountU maxCountByU bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU timeTotal avgTimeByR maxAvgTimeS maxAvgTimeByS maxTimeU maxTimeByU maxAvgTimeU maxAvrTimeByU uniqIpCount maxCountIp maxCountByIp<<< `less $file | awk -v limit=3 'BEGIN{maxTime=0; maxRate=0;maxBytes=0} 
-{ip=$1;sec =$4;time=$11; bytes=$10; split($7,urls,"?"); url=urls[1];
+read countTotal avgCountByS maxCountS maxCountByS maxCountU maxCountByU bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU timeTotal avgTimeByR maxAvgTimeS maxAvgTimeByS maxTimeU maxTimeByU maxAvgTimeU maxAvrTimeByU uniqIpCount maxCountIp maxCountByIp c200 c300 c400 c500<<< `less $file | awk -v limit=3 'BEGIN{maxTime=0; maxRate=0;maxBytes=0;c200=0;c300=0;c400=0;c500=0;} 
+{ip=$1;sec =$4;time=$11; bytes=$10; split($7,urls,"?"); url=urls[1];code=$9;
     countTotal++;timeTotal+=time; bytesTotal+=bytes; 
     countByS[sec]++; countByU[url]++; countByIp[ip]++;
     bytesByS[sec]+=bytes; bytesByU[url]+=bytes;
     timeByS[sec]+=time;timeByU[url]+=time;
+    if(code>=200 && code<300){c200++};if(code>=300 && code<400){c300++};if(code>=400 && code<500){c400++};if(code>=500){c500++}
 } 
 END{maxCountS="";maxCountByS=0; 
     for(s in countByS){if(countByS[s] > maxCountByS){maxCountByS = countByS[s]; maxCountS=s}}; 
@@ -104,7 +111,8 @@ END{maxCountS="";maxCountByS=0;
     print countTotal, avgCountByS, maxCountS, maxCountByS, maxCountU, maxCountByU, 
         bytesTotal/1024/1024, avgBytesByR/1024, avgRateByS/1024, maxRateS, maxRateByS/1024, maxBytesU, maxBytesByU/1024/1024, 
         timeTotal, avgTimeByR, maxAvgTimeS, maxAvgTimeByS, maxTimeU, maxTimeByU, maxAvgTimeU, maxAvrTimeByU,
-        uniqIpCount, maxCountIp, maxCountByIp
+        uniqIpCount, maxCountIp, maxCountByIp,
+        c200, c300,c400,c500
         }'
 `
 
@@ -122,6 +130,11 @@ echo "      total ${timeTotal}s, average ${avgTimeByR}s/req"
 echo "      max total time ${maxTimeByU}s of url ${maxTimeU}"
 echo "      slowest response time ${maxAvrTimeByU}s/req of url ${maxAvrTimeU}"
 echo "      slowest response time ${maxAvgTimeByS}s/req at ${maxAvgTimeS}"
+echo "response code(-c for detail): "
+echo "      ${c200} out of ${countTotal} returns OK"
+echo "      3XX: ${c300}"
+echo "      4XX: ${c400}"
+echo "      5XX: ${c500}"
 echo "ip addresses(-i for detail): "
 echo "      unique ip addresses count ${uniqIpCount}"
 echo "      max requests ${maxCountByIp} from ip ${maxCountIp}"
@@ -187,6 +200,25 @@ if [ "${showResponseTime}" = "1" ]; then
     echo "---------By Url(average)"
     echo "Response Time/req \t Total Time \t requests count \t url"
     less $file | awk '{printf("%s?%s\n", $11,$7)}' | awk -F '?' '{requests[$2]++;times[$2]+=$1} END{for(i in requests){printf("%s %s %s %s\n", times[i] /requests[i], times[i], requests[i], i)}}' | sort -nr | head -n 10 | awk '{printf("%ss %ss %s %s\n", $1, $2, $3, $4)}'
+    echo "---------End of Reponse Time Details---------"
+fi
+
+# -c
+if [ "${showResponseCode}" = "1" ]; then
+    echo ""
+    echo "---------Reponse Code Details---------"
+    echo "---------3XX"
+    echo "Requests count \t url"
+    less $file | awk '{split($7,urls,"?"); url=urls[1];code=$9;if(code>=300 && code<400){codes[url]++};} END{for(u in codes){printf("%s %s\n", codes[u], u)}}' | sort -nr | head -n 10
+
+    echo "---------4XX"
+    echo "Requests count \t url"
+    less $file | awk '{split($7,urls,"?"); url=urls[1];code=$9;if(code>=400 && code<500){codes[url]++};} END{for(u in codes){printf("%s %s\n", codes[u], u)}}' | sort -nr | head -n 10
+
+    echo ""
+    echo "---------5XX"
+    echo "Requests count \t url"
+    less $file | awk '{split($7,urls,"?"); url=urls[1];code=$9;if(code>=500 && code<600){codes[url]++};} END{for(u in codes){printf("%s %s\n", codes[u], u)}}' | sort -nr | head -n 10
     echo "---------End of Reponse Time Details---------"
 fi
 
