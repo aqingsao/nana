@@ -69,10 +69,14 @@ For example:
 
 #### Options
 Add options to see details
+* -c: show reponse code statistics
+* -h: show help message
+* -i: show ip addresses statistics
 * -p: show page visits detail
 * -r: show traffic and rate details
-* -t: show response time detail
-* -s: show slow queries
+* -s: show slow queries that are probably performance bottlenecks
+* -t: show response time details
+* -u: show upstream server statistics
 
 #### Example output with option -t: 
 
@@ -122,7 +126,6 @@ You could use awk to check whether it works:
 - [x] traffic and rate
 - [x] response time statistics
 - [x] response code(5**/4**/3**)
-- [ ] Identify moments that traffic rate is limited by bandwith
-- [x] Identify moments that upstream servers are slow
-- [ ] Show access frequency of crawlers(google bot, baidu spider, bingbot, MJ12bot, YandexBot)
+- [x] Identify and classify slow requests(Slow upstream servers; bandwith limit; poor network condition)
+- [ ] Show crawlers statistics (google bot, baidu spider, bingbot, MJ12bot, YandexBot, Sogou web spider/)
 - [ ] Show market shares of various mobile phones(iphone/android/win phone...); and portions of versions(iPhone 5, 6, 7, 8, 9)/manufactures(Huawei, Samsung, iPhone, Nexus, Letv, HTC, vivo, Xiaomi)

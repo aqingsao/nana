@@ -3,15 +3,15 @@
 function printHelp()
 {
     echo "Usage:"
-    echo "-h: usage"
     echo "-a: show all details"
+    echo "-c: response code"
+    echo "-h: usage"
+    echo "-i: ip addresses"
     echo "-p: page visits"
     echo "-r: traffic rate"
-    echo "-t: response time"
-    echo "-c: response code"
-    echo ""
-    echo "-i: ip addresses"
-    echo "-s: slow queries(over 3 seconds for 8 out of 10 continuous requests)"
+    echo "-s: slow responses that are probably performance bottlenecks"
+    echo "-t: response time statisticss"
+    echo "-u: upstream server details"
     echo ""
 }
 
@@ -23,13 +23,9 @@ showResponseCode=0
 showUpstreamServers=0
 showIp=0
 showSlowQueries=0
-while getopts ":hacprusti" optname
+while getopts ":achiprstu" optname
   do
     case "$optname" in
-      "h")
-        printHelp
-        exit 1
-        ;;
       "a")
         showPageVisits=1
         showTrafficRate=1
@@ -39,26 +35,30 @@ while getopts ":hacprusti" optname
         showResponseCode=1
         showUpstreamServers=1
         ;;
+      "c")
+        showResponseCode=1
+        ;;
+      "h")
+        printHelp
+        exit 1
+        ;;
+      "i")
+        showIp=1
+        ;;
       "p")
         showPageVisits=1
         ;;
       "r")
         showTrafficRate=1
         ;;
-      "u")
-        showUpstreamServers=1
+      "s")
+        showSlowQueries=1
         ;;
       "t")
         showResponseTime=1
         ;;
-      "i")
-        showIp=1
-        ;;
-      "s")
-        showSlowQueries=1
-        ;;
-      "c")
-        showResponseCode=1
+      "u")
+        showUpstreamServers=1
         ;;
       *) 
         printHelp
@@ -90,14 +90,15 @@ slowIpCount=`less $file | awk -v limit="$seconds" '{if($11>limit){print $1}}' | 
 # m: max; a: average; c: count
 # S: second; U: url; R: request; T: total; US: up server
 # 
-read countTotal avgCountByS maxCountS maxCountByS maxCountU maxCountByU bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU timeTotal avgTimeByR maxAvgTimeS maxAvgTimeByS maxTimeU maxTimeByU maxAvgTimeU maxAvrTimeByU uniqIpCount maxCountIp maxCountByIp c200 c300 c400 c500 upServerC maxCountUS maxCountByUS slowestUS slowestByUS<<< `less $file | awk -v limit=3 'BEGIN{maxTime=0; maxRate=0;maxBytes=0;c200=0;c300=0;c400=0;c500=0;} 
+read countTotal avgCountByS maxCountS maxCountByS maxCountU maxCountByU bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU timeTotal avgTimeByR maxAvgTimeS maxAvgTimeByS maxTimeU maxTimeByU maxAvgTimeU maxAvrTimeByU uniqIpCount maxCountIp maxCountByIp c200 c300 c400 c500 upServerC maxCountUS maxCountByUS slowestUS slowestByUS slowC slowP<<< `less $file | awk -v limit=3 'BEGIN{maxTime=0; maxRate=0;maxBytes=0;c200=0;c300=0;c400=0;c500=0;slowC=0;} 
 {ip=$1;sec =$4;time=$11; bytes=$10; split($7,urls,"?"); url=urls[1];code=$9;
     countTotal++;timeTotal+=time; bytesTotal+=bytes; 
     countByS[sec]++; countByU[url]++; countByIp[ip]++;
     bytesByS[sec]+=bytes; bytesByU[url]+=bytes;
     timeByS[sec]+=time;timeByU[url]+=time;
     ut=$12; us=$13;if(us == "-"){us=""};if(ut=="-"){ut=0};countByUS[us]++;timeByUS[us]+=ut;
-    if(code>=200 && code<300){c200++};if(code>=300 && code<400){c300++};if(code>=400 && code<500){c400++};if(code>=500){c500++}
+    if(code>=200 && code<300){c200++};if(code>=300 && code<400){c300++};if(code>=400 && code<500){c400++};if(code>=500){c500++};
+    if(time>=3){slowC++};
 } 
 END{maxCountS="";maxCountByS=0; 
     for(s in countByS){if(countByS[s] > maxCountByS){maxCountByS = countByS[s]; maxCountS=s}}; 
@@ -115,13 +116,14 @@ END{maxCountS="";maxCountByS=0;
     for(ip in countByIp){if(countByIp[ip] > maxCountByIp){maxCountByIp = countByIp[ip]; maxCountIp=ip}}; 
     upServerC=length(countByUS)-1;maxCountUS="";maxCountByUS=0;slowestUS="";slowestByUS=0;
     for(us in countByUS){if(us != "" && countByUS[us]>maxCountByUS){maxCountByUS=countByUS[us];maxCountUS=us};if(us != "" && timeByUS[us]/countByUS[us]>slowestByUS){slowestByUS=timeByUS[us]/countByUS[us];slowestUS=us;}}
-
+    slowP=slowC/countTotal * 100;
     print countTotal, avgCountByS, maxCountS, maxCountByS, maxCountU, maxCountByU, 
         bytesTotal/1024/1024, avgBytesByR/1024, avgRateByS/1024, maxRateS, maxRateByS/1024, maxBytesU, maxBytesByU/1024/1024, 
         timeTotal, avgTimeByR, maxAvgTimeS, maxAvgTimeByS, maxTimeU, maxTimeByU, maxAvgTimeU, maxAvrTimeByU,
         uniqIpCount, maxCountIp, maxCountByIp,
         c200, c300,c400,c500,
-        upServerC,maxCountUS,maxCountByUS,slowestUS,slowestByUS
+        upServerC,maxCountUS,maxCountByUS,slowestUS,slowestByUS,
+        slowC,slowP
         }'
 `
 
@@ -152,6 +154,7 @@ echo "ip addresses(-i for detail): "
 echo "      unique ip addresses count ${uniqIpCount}"
 echo "      max requests ${maxCountByIp} from ip ${maxCountIp}"
 echo "slow queries(-s for detail): "
+echo "      total requests ${countTotal}, slow requests ${slowC}, percentage ${slowP}%"
 echo "---------End of Nginx Summary---------"
 # echo "ip addresses: uniq count $ipCount, slow $slowIpCount"
 # echo "slow requests(-q), slow $slowReqsCount, rate "
@@ -266,10 +269,60 @@ if [ "${showIp}" = "1" ]; then
     echo "---------End of Ip Addresses Details---------"
 fi
 
-# -q
+# -s
 if [ "${showSlowQueries}" = "1" ]; then
     echo ""
-    echo "---------slow queries(over 3 seconds for 8 out of 10 continuous requests)---------"
-    less $file | awk -v limit=3 '{lines[NR]=$0;time[NR]=$11;slowCount=0;if($11 >= limit && NR >= 10){for(i = 10; i >=0; i--){if(time[NR-i] >= limit){slowCount++}; }}; if(slowCount >=6 ){for(i = 10; i >=0; i--){print lines[NR-i]}}}' | head -n 50
-    echo "---------End of Ip Addresses Details---------"
+    echo "---------Slow Queries---------"
+    echo "[Caused by Nginx configuration or Limited bandwith]"
+    less $file | awk -v limit=2 'BEGIN{line=0;shouldPrint=0;}
+        {if($12 == "-" && $11 < limit){next};
+        line++;time[line]=$11;upTime[line]=$12;if(upTime[line]=="-"){upTime[line]=0};if(time[line] >= limit && time[line] >= 1.5*upTime[line]){isSlow[line]=1}else{isSlow[line]=0};
+        ip[line]=$1;second[line]=$4;method[line]=$6;url[line]=$7;code[line]=$9;size[line]=$10;upServer[line]=$13;agent[line]=$14;
+        if(line<10){next};
+        recentSlowCount=0;for(i = 9; i >=0; i--){if(isSlow[line-i]==1){recentSlowCount++}};
+        if(recentSlowCount<6){
+            if(shouldPrint == 1){print("-----------------------");shouldPrint=0;};
+        }else{
+            if(shouldPrint == 0){for(i = 9; i >=0; i--){printf("%s %ss %ss %s %sB %s %s %s\n",second[line-i],time[line-i],upTime[line-i],code[line-i],size[line-i],ip[line-i],url[line-i],agent[line-i])};shouldPrint=1;}
+            else{printf("%s %ss %ss %s %sB %s %s %s\n",second[line],time[line],upTime[line],code[line],size[line],ip[line],url[line],agent[line])}
+        }}' | more
+
+    echo "[Caused by upstream servers]"
+    less $file | awk -v limit=2 'BEGIN{line=0;shouldPrint=0;}
+        {if($12 >0){
+        line++;time[line]=$11;upTime[line]=$12;if(upTime[line] >= limit){isSlow[line]=1}else{isSlow[line]=0};
+        ip[line]=$1;second[line]=$4;method[line]=$6;url[line]=$7;code[line]=$9;size[line]=$10;upServer[line]=$13;agent[line]=$14;
+        if(line<10){next};
+        recentSlowCount=0;for(i = 9; i >=0; i--){if(isSlow[line-i]==1){recentSlowCount++}};
+        if(recentSlowCount<6){
+            if(shouldPrint == 1){print("-----------------------");shouldPrint=0;};
+        }else{
+            if(shouldPrint == 0){for(i = 9; i >=0; i--){printf("%s %ss %ss %s %sB %s %s %s\n",second[line-i],time[line-i],upTime[line-i],code[line-i],size[line-i],ip[line-i],url[line-i],agent[line-i])};shouldPrint=1;}
+            else{printf("%s %ss %ss %s %sB %s %s %s\n",second[line],time[line],upTime[line],code[line],size[line],ip[line],url[line],agent[line])}
+        }}}' | more
+
+    echo "[Caused by poor network conditions of clients' mobile phones]"
+    less $file | awk -v limit=5 'BEGIN{line=0;shouldPrint=0;}
+        {line++;time[line]=$11;upTime[line]=$12;if(upTime[line]=="-"){upTime[line]=0};if(time[line] >= limit && time[line] >= 2*upTime[line]){isSlow[line]=1}else{isSlow[line]=0};
+        ip[line]=$1;second[line]=$4;method[line]=$6;url[line]=$7;code[line]=$9;size[line]=$10;upServer[line]=$13;agent[line]=$14;
+        if(line<10){next};
+        recentSlowCount=0;for(i = 9; i >=0; i--){if(isSlow[line-i]==1){recentSlowCount++}};
+        if(recentSlowCount>0 && recentSlowCount <= 3){
+            if(shouldPrint == 0){for(i = 9; i >=0; i--){
+                    if(isSlow[line-i]){
+                        printf("%s %ss %ss %s %sB %s %s %s\n",second[line-i],time[line-i],upTime[line-i],code[line-i],size[line-i],ip[line-i],url[line-i],agent[line-i])
+                    };
+                }
+                shouldPrint=1;
+            }
+            else{
+                if(isSlow[line-i]){
+                    printf("%s %ss %ss %s %sB %s %s %s\n",second[line],time[line],upTime[line],code[line],size[line],ip[line],url[line],agent[line])
+                };
+            }
+        }else{
+            shouldPrint=0;
+        }}' | more
+
+    echo "---------End of Slow Queries---------"
 fi
