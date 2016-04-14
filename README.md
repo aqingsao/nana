@@ -27,8 +27,6 @@ So far the following metrics are collected:
 - Count of unique ip addresses; Top 10 ip addresses that visits most frequently
 
 
-
-
 # Usages
 `nana.sh <options> logfile`
 
@@ -59,6 +57,8 @@ For example:
         3XX: 10845
         4XX: 421
         5XX: 0
+    slow queries(-s for detail):    
+        total requests 145263, slow requests 208, percentage 0.143189%    
     upstream servers(-u for detail):
         upstream server count 3
         Busiest server "XX.XX.XX.XX:XXX" with 440100 requests
@@ -74,7 +74,7 @@ Add options to see details
 * -i: show ip addresses statistics
 * -p: show page visits detail
 * -r: show traffic and rate details
-* -s: show slow queries that are probably performance bottlenecks
+* -s: identify and classify slow queries
 * -t: show response time details
 * -u: show upstream server statistics
 
@@ -93,6 +93,7 @@ Add options to see details
     2.8541s 2.8541s 1 /api/url4
     ...
     ---------End of Reponse Time Details---------
+
 
 # FAQ
 #### 1. How to identify requests that are really slow?
