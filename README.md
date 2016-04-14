@@ -20,6 +20,14 @@ So far the following metrics are collected:
 #### Slow requests
 - List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 
+#### Upstream servers
+- Show busiest and slowest upstream servers
+
+#### Ip addresses
+- Count of unique ip addresses; Top 10 ip addresses that visits most frequently
+
+
+
 
 # Usages
 `nana.sh <options> logfile`
@@ -46,16 +54,41 @@ For example:
         max total time 12224.93s of url ***  
         slowest response time 12.266s/req of url ***  
         slowest response time 4.50s/req at [13/Apr/2016:09:35:20  
+    response code(-c for detail):
+        OK:  82951 out of 94218
+        3XX: 10845
+        4XX: 421
+        5XX: 0
+    upstream servers(-u for detail):
+        upstream server count 3
+        Busiest server "XX.XX.XX.XX:XXX" with 440100 requests
+        Slowest server "XX.XX.XX.XX:XXX" with average response time 0.705s
     ip addresses(-i for detail):  
         unique ip addresses count 33413  
-        max requests 4689 from ip ***  
+        max requests 4689 from ip ***
 
 #### Options
+Add options to see details
 * -p: show page visits detail
 * -r: show traffic and rate details
 * -t: show response time detail
 * -s: show slow queries
 
+#### Example output with option -t: 
+
+    ---------Reponse Time Details---------
+    [Total response time by Url]
+    Total Time \t Response Time/req \t requests count \t url
+    1943.22s 0.0955697s 20333 /api/url1
+    1010.53s 0.495357s 2040 /api/url2
+    ...
+
+    [Average response time by Url]
+    Response Time/req \t Total Time \t requests count \t url
+    2.871s 28.71s 10 /api/url3
+    2.8541s 2.8541s 1 /api/url4
+    ...
+    ---------End of Reponse Time Details---------
 
 # FAQ
 #### 1. How to identify requests that are really slow?
@@ -90,6 +123,6 @@ You could use awk to check whether it works:
 - [x] response time statistics
 - [x] response code(5**/4**/3**)
 - [ ] Identify moments that traffic rate is limited by bandwith
-- [ ] Identify moments that upstream servers are slow
+- [x] Identify moments that upstream servers are slow
 - [ ] Show access frequency of crawlers(google bot, baidu spider, bingbot, MJ12bot, YandexBot)
 - [ ] Show market shares of various mobile phones(iphone/android/win phone...); and portions of versions(iPhone 5, 6, 7, 8, 9)/manufactures(Huawei, Samsung, iPhone, Nexus, Letv, HTC, vivo, Xiaomi)
