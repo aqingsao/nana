@@ -17,17 +17,31 @@ So far the following metrics are collected:
 - List top 10 urls that takes longest response time in total
 - List top 10 urls that takes longest response time in average
 
-#### Slow requests
-- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
-
 #### Upstream servers
 - Show busiest and slowest upstream servers
 
 #### Ip addresses
 - Count of unique ip addresses; Top 10 ip addresses that visits most frequently
 
+#### Response code
+- Statistics of HTTP response codes
+
+#### Slow requests
+- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 
 # Usages
+Nana provides a list of available commands with usage:
+
+    n<command>.sh [options] <logfile>
+
+Where 'logfile' is the absolute location of nginx log file;
+
+#### Page visits
+`npv.sh [options] <logfile>`
+
+Options: 
+- -n: Number of busiest moments to show, default 10.
+
 `nana.sh <options> logfile`
 
 Where 'logfile' is the absolute location of nginx log file;

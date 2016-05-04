@@ -15,7 +15,6 @@ function printHelp()
     echo ""
 }
 
-showUrls=0
 showPageVisits=0
 showTrafficRate=0
 showResponseTime=0
