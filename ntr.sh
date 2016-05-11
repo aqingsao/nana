@@ -41,12 +41,11 @@ if [ ! -f $file ]; then
   exit 1;
 fi
 
-ipCount=`less $file | awk '{print $1}' | sort | uniq | wc -l`
-slowIpCount=`less $file | awk -v limit="$seconds" '{if($11>limit){print $1}}' | sort | uniq | wc -l`
-
 # m: max; a: average; c: count
 # S: second; U: url; R: request; T: total; US: up server
 # 
+echo "Traffic and Rate Summary: "
+
 read bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU avgTimeByR maxTimeU maxTimeByU maxAvgTimeU maxAvgTimeByU<<< `less $file | awk -v limit=3 '
 {sec =$4;time=$11; bytes=$10; split($7,urls,"?"); url=urls[1];code=$9;
     countTotal++;timeTotal+=time; bytesTotal+=bytes; 
@@ -70,7 +69,6 @@ END{maxCountS="";maxCountByS=0;
         }'
 `
 
-echo "Traffic and Rate Summary: "
 echo "      total traffic ${bytesTotal}MB, average traffic ${avgBytesByR}KB/req, max traffic ${maxBytesByU}MB of url ${maxBytesU}"
 echo "      average rate ${avgRateByS}KB/s, peak rate ${maxRateByS}KB/s at ${maxRateS}"
 echo "      average response time ${avgTimeByR}s/req, max response time ${maxTimeByU}s of url ${maxTimeU}, slowest response time ${maxAvgTimeByU}s/req of url ${maxAvgTimeU}"
@@ -78,29 +76,29 @@ echo "      average response time ${avgTimeByR}s/req, max response time ${maxTim
 echo ""
 echo "[Traffic by Seconds]"
 echo "Traffic \t Rate \t Moment \t"
-less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in bytes){if(time[s] > 0){printf("%s %s %s\n", bytes[s], bytes[s]/time[s], s)}}}' | sort -nr | head -n ${lineCount} | awk '{printf("%sKB %sKB/s %s\n", $1 / 1024, $2 / 1024, $3)}'
+less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in bytes){if(time[s] > 0){printf("%sKB %sKB/s %s\n", bytes[s]/1024, bytes[s]/time[s]/1024, s)}}}' | sort -nr | head -n ${lineCount}
 
 echo ""
 echo "[Rate by Seconds]"
 echo "Rate \t Traffic \t Moment \t"
-less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in time){if(time[s] > 0){printf("%s %s %s\n", bytes[s]/time[s], bytes[s], s)}}}' | sort -nr | head -n ${lineCount} | awk '{printf("%sKB/s %sKB %s\n", $1 / 1024, $2 / 1024, $3)}'
+less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in time){if(time[s] > 0){printf("%sKB/s %sKB %s\n", bytes[s]/time[s], bytes[s], s)}}}' | sort -nr | head -n ${lineCount}
 
 echo ""
 echo "[Total Response Size by Urls]"
 echo "Traffic \t Traffic/req \t requests count \t url"
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{url=$2; requests[url]++;bytes[url]+=$1} END{for(url in requests){printf("%s %s %s %s\n", bytes[url] / 1024 / 1024, bytes[url] /requests[url] / 1024, requests[url], url)}}' | sort -nr | head -n 10 | awk '{printf("%sMB %sKB %s %s\n", $1, $2, $3, $4)}'
+less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;bytes[url]+=$10} END{for(url in requests){printf("%sMB %sKB/req %s %s\n", bytes[url] / 1024 / 1024, bytes[url] /requests[url] / 1024, requests[url], url)}}' | sort -nr | head -n ${lineCount}
 
 echo ""
 echo "[Average Response Size by Url]"
 echo "Response Size/req \t Total Response Size \t requests count \t url"
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{url=$2; requests[url]++;bytes[url]+=$1} END{for(url in requests){printf("%s %s %s %s\n", bytes[url] /requests[url] / 1024, bytes[url] / 1024 / 1024, requests[url], url)}}' | sort -nr | head -n 10 | awk '{printf("%sKB %sMB %s %s\n", $1, $2, $3, $4)}'
+less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;bytes[url]+=$10} END{for(url in requests){printf("%sKB/req %sMB %s %s\n", bytes[url] /requests[url] / 1024, bytes[url] / 1024 / 1024, requests[url], url)}}' | sort -nr | head -n ${lineCount}
 
 echo ""
 echo "[Total response time by Url]"
 echo "Total Time \t Response Time/req \t requests count \t url"
-less $file | awk '{printf("%s?%s\n", $11,$7)}' | awk -F '?' '{requests[$2]++;times[$2]+=$1} END{for(i in requests){printf("%s %s %s %s\n", times[i], times[i] /requests[i], requests[i], i)}}' | sort -nr | head -n 10 | awk '{printf("%ss %ss %s %s\n", $1, $2, $3, $4)}'
+less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;times[url]+=$11} END{for(i in requests){printf("%ss %ss/req %s %s\n", times[i], times[i] /requests[i], requests[i], i)}}' | sort -nr | head -n ${lineCount}
 
 echo ""
 echo "[Average response time by Url]"
 echo "Response Time/req \t Total Time \t requests count \t url"
-less $file | awk '{printf("%s?%s\n", $11,$7)}' | awk -F '?' '{requests[$2]++;times[$2]+=$1} END{for(i in requests){printf("%s %s %s %s\n", times[i] /requests[i], times[i], requests[i], i)}}' | sort -nr | head -n 10 | awk '{printf("%ss %ss %s %s\n", $1, $2, $3, $4)}'
+less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;times[url]+=$11} END{for(i in requests){printf("%ss/req %ss %s %s\n", times[i] /requests[i], times[i], requests[i], i)}}' | sort -nr | head -n ${lineCount}
