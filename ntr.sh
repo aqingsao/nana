@@ -46,7 +46,7 @@ fi
 # 
 echo "Traffic and Rate Summary: "
 
-read bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU avgTimeByR maxTimeU maxTimeByU maxAvgTimeU maxAvgTimeByU<<< `less $file | awk -v limit=3 '
+read bytesTotal avgBytesByR avgRateByS maxRateS maxRateByS maxBytesU maxBytesByU avgTimeByR <<< `less $file | awk -v limit=3 '
 {sec =$4;time=$11; bytes=$10; split($7,urls,"?"); url=urls[1];code=$9;
     countTotal++;timeTotal+=time; bytesTotal+=bytes; 
     countByS[sec]++; countByU[url]++; countByIp[ip]++;
@@ -62,16 +62,15 @@ END{maxCountS="";maxCountByS=0;
     for(u in bytesByU){if(bytesByU[u] > maxBytesByU){maxBytesByU = bytesByU[u]; maxBytesU=u}}; 
     avgRateByS=bytesTotal/timeTotal;maxRateS="";maxRateByS=0;
     for(s in bytesByS){if(timeByS[s] > 0 && bytesByS[s]/timeByS[s] > maxRateByS){maxRateByS = bytesByS[s]/timeByS[s]; maxRateS=s}}; 
-    avgTimeByR=timeTotal/countTotal;maxTimeU="";maxTimeByU=0;maxAvgTimeU="";maxAvgTimeByU=0;
-    for(u in timeByU){if(timeByU[u] > maxTimeByU){maxTimeByU = timeByU[u]; maxTimeU=u}; if(timeByU[u]/countByU[u] > maxAvgTimeByU){maxAvgTimeByU=timeByU[u]/countByU[u]; maxAvgTimeU=u}}; 
+    avgTimeByR=timeTotal/countTotal;
     print bytesTotal/1024/1024, avgBytesByR/1024, avgRateByS/1024, maxRateS, maxRateByS/1024, maxBytesU, maxBytesByU/1024/1024, 
-        avgTimeByR, maxTimeU, maxTimeByU, maxAvgTimeU, maxAvgTimeByU
+        avgTimeByR
         }'
 `
 
-echo "      total traffic ${bytesTotal}MB, average traffic ${avgBytesByR}KB/req, max traffic ${maxBytesByU}MB of url ${maxBytesU}"
+echo "      total traffic ${bytesTotal}MB, average traffic ${avgBytesByR}KB/req"
 echo "      average rate ${avgRateByS}KB/s, peak rate ${maxRateByS}KB/s at ${maxRateS}"
-echo "      average response time ${avgTimeByR}s/req, max response time ${maxTimeByU}s of url ${maxTimeU}, slowest response time ${maxAvgTimeByU}s/req of url ${maxAvgTimeU}"
+echo "      average response time ${avgTimeByR}s/req"
 
 echo ""
 echo "[Traffic by Seconds]"
@@ -79,26 +78,12 @@ echo "Traffic \t Rate \t Moment \t"
 less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in bytes){if(time[s] > 0){printf("%sKB %sKB/s %s\n", bytes[s]/1024, bytes[s]/time[s]/1024, s)}}}' | sort -nr | head -n ${lineCount}
 
 echo ""
-echo "[Rate by Seconds]"
-echo "Rate \t Traffic \t Moment \t"
-less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in time){if(time[s] > 0){printf("%sKB/s %sKB %s\n", bytes[s]/time[s], bytes[s], s)}}}' | sort -nr | head -n ${lineCount}
-
-echo ""
-echo "[Total Response Size by Urls]"
+echo "[Response Size by Urls]"
 echo "Traffic \t Traffic/req \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;bytes[url]+=$10} END{for(url in requests){printf("%sMB %sKB/req %s %s\n", bytes[url] / 1024 / 1024, bytes[url] /requests[url] / 1024, requests[url], url)}}' | sort -nr | head -n ${lineCount}
+less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $10}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;bytes[$1]+=$2} END{for(url in requests){printf("%s/1024/1024 %s/1024 %s %s\n", bytes[url], bytes[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount} | awk '{printf("%sMB %sKB/req %s %s\n", $1, $2, $3, $4)}'
 
 echo ""
-echo "[Average Response Size by Url]"
-echo "Response Size/req \t Total Response Size \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;bytes[url]+=$10} END{for(url in requests){printf("%sKB/req %sMB %s %s\n", bytes[url] /requests[url] / 1024, bytes[url] / 1024 / 1024, requests[url], url)}}' | sort -nr | head -n ${lineCount}
-
-echo ""
-echo "[Total response time by Url]"
+echo "[Response time by Url]"
 echo "Total Time \t Response Time/req \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;times[url]+=$11} END{for(i in requests){printf("%ss %ss/req %s %s\n", times[i], times[i] /requests[i], requests[i], i)}}' | sort -nr | head -n ${lineCount}
+less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $11}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;time[$1]+=$2} END{for(url in requests){printf("%smin %ss/req %s %s\n", time[url] / 60, time[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount}
 
-echo ""
-echo "[Average response time by Url]"
-echo "Response Time/req \t Total Time \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; requests[url]++;times[url]+=$11} END{for(i in requests){printf("%ss/req %ss %s %s\n", times[i] /requests[i], times[i], requests[i], i)}}' | sort -nr | head -n ${lineCount}

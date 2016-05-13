@@ -43,7 +43,7 @@ fi
 
 # m: max; a: average; c: count
 # S: second; U: url; R: request; T: total; US: up server
-read countTotal avgCountByS maxCountByS maxCountS maxCountByU maxCountU <<< `less $file | awk'
+read countTotal avgCountByS maxCountByS maxCountS maxCountByU maxCountU <<< `less $file | awk '
 {sec =$4;time=$11; split($7,urls,"?"); url=urls[1];countTotal++; countByS[sec]++; countByU[url]++;} 
 END{maxCountS="";maxCountByS=0; 
     for(s in countByS){if(countByS[s] > maxCountByS){maxCountByS = countByS[s]; maxCountS=s}}; 
