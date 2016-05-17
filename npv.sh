@@ -70,4 +70,4 @@ less $file | awk -v limit=3 '{hour=substr($4,2,14);min=substr($4,20,2);min=min-m
 echo ""
 echo "[Busiest Urls]"
 echo "Page Visits \t Page Size/req \t url \t"
-less $file | awk '{printf("%s?%s\n", $10,$7)}' | awk -F '?' '{reqs[$2]++;bytes[$2]+=$1} END{for(i in reqs){printf("%s %sKB %s\n", reqs[i], bytes[i] / reqs[i] / 1024, i)}}' | sort -nr | head -n ${lineCount}
+less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $10}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g'  | awk '{reqs[$1]++;bytes[$1]+=$2} END{for(i in reqs){printf("%s %sKB %s\n", reqs[i], bytes[i] / reqs[i] / 1024, i)}}' | sort -nr | head -n ${lineCount}
