@@ -135,7 +135,6 @@ You could use awk to check whether it works:
     less /var/log/ngin/main.log | awk '{print $11}' | head -n 1 // should print request time  
     less /var/log/ngin/main.log | awk '{print $13}' | head -n 1 // should print upstream server address
 
-
 # TODO List
 - [x] page visits
 - [x] traffic and rate

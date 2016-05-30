@@ -65,7 +65,7 @@ less $file | awk '{second=substr($4, 2, 17);reqs[second]++; bytes[second]+=$10; 
 echo ""
 echo "[Busiest Moments By Every 5 Minutes]"
 echo "Page Visits \t Response Size \t Time Spent/req \t Moment \t"
-less $file | awk -v limit=3 '{hour=substr($4,2,14);min=substr($4,20,2);min=min-min%5;if(min<10){min=hour":0"min;}else{min=hour":"min}; reqs[min]++; bytes[min]+=$10; times[min]+=$11;} END{totalReqs=0;for(m in reqs){totalReqs+=reqs[m]};avgReqsPerMin=totalReqs/length(reqs);for(m in reqs){if(reqs[m] > limit * avgReqsPerMin){printf("%s %s %sMB %ss\n", m,reqs[m], bytes[m] / 1024 / 1024, times[m]/reqs[m])}}}' | sort
+less $file | awk -v '{hour=substr($4,2,14);min=substr($4,20,2);min=min-min%5;if(min<10){min=hour":0"min;}else{min=hour":"min}; reqs[min]++; bytes[min]+=$10; times[min]+=$11;} END{totalReqs=0;for(m in reqs){totalReqs+=reqs[m]};avgReqsPerMin=totalReqs/length(reqs);for(m in reqs){printf("%s %s %sMB %ss\n", m,reqs[m], bytes[m] / 1024 / 1024, times[m]/reqs[m])}}' | sort
 
 echo ""
 echo "[Busiest Urls]"

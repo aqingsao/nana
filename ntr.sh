@@ -9,7 +9,7 @@ function printHelp()
 }
 
 lineCount=10
-while getopts ":hrt" optname
+while getopts ":nh" optname
   do
     case "$optname" in
       "n")
@@ -80,10 +80,15 @@ less $file | awk '{second=$4;bytes[second]+=$10;time[second]+=$11} END{for(s in 
 echo ""
 echo "[Response Size by Urls]"
 echo "Traffic \t Traffic/req \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $10}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;bytes[$1]+=$2} END{for(url in requests){printf("%s/1024/1024 %s/1024 %s %s\n", bytes[url], bytes[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount} | awk '{printf("%sMB %sKB/req %s %s\n", $1, $2, $3, $4)}'
+less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $10}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;bytes[$1]+=$2} END{for(url in requests){printf("%s %s %s %s\n", bytes[url], bytes[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount} | awk '{printf("%sMB %sKB/req %s %s\n", $1/1024/1024, $2/1024, $3, $4)}'
 
 echo ""
 echo "[Response time by Url]"
 echo "Total Time \t Response Time/req \t requests count \t url"
-less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $11}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;time[$1]+=$2} END{for(url in requests){printf("%smin %ss/req %s %s\n", time[url] / 60, time[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount}
+less $file | awk '{split($7,urls,"?"); url=urls[1]; print url, $11}' | sed -e 's:.json::' -re 's/[0-9]+([\/| ])/*\1/g' | awk '{requests[$1]++;time[$1]+=$2} END{for(url in requests){printf("%s %s %s %s\n", time[url], time[url] /requests[url], requests[url], url)}}' | sort -nr | head -n ${lineCount}| awk '{printf("%smin %ss/req %s %s\n", $1/60, $2, $3, $4)}'
+
+echo ""
+echo "[Response time Trends]"
+echo "Moment \t requests count \t Response Time/req \t Reponse Size"
+less $file | awk '{hour=substr($4,2,14);bytes[hour]+=$10;time[hour]+=$11;requests[hour]++} END{for(h in bytes){if(time[h] > 0){printf("%s %s %ss %sMB\n", h, requests[h], time[h]/requests[h], bytes[h]/1024/1024)}}}' | sort -n
 
