@@ -41,16 +41,6 @@ if [ ! -f $file ]; then
   exit 1;
 fi
 
-Baiduspider; Sogou web spider;JikeSpider;
-Applebot; bingbot; MJ12bot;Googlebot;Exabot;yahoo! Slurp;
-YandexBot; AhrefsBot
-
-echo "      total traffic ${bytesTotal}MB, average traffic ${avgBytesByR}KB/req"
-echo "      average rate ${avgRateByS}KB/s, peak rate ${maxRateByS}KB/s at ${maxRateS}"
-echo "      average response time ${avgTimeByR}s/req"
-
-echo ""
-echo "[Traffic by Seconds]"
-echo "Traffic \t Rate \t Moment \t"
-less $file | egrep 'spider|bot' | awk '{name=$17;if(index($15,"spider")>0){name=$15};spiders[name]++} END{for(name in spiders){printf("%s %s\n",spiders[name], name)}';
+echo "Visit count \t Spider \t"
+less $file | egrep 'spider|bot' | awk '{name=$17;if(index($15,"spider")>0){name=$15};spiders[name]++} END{for(name in spiders){printf("%s %s\n",spiders[name], name)}}' | sort -nr
 

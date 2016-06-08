@@ -1,124 +1,111 @@
 # About nana
-Nana is an Nginx log analyzer to identify performance bottlenecks. It's written in shell and awk, aiming to be the best Nginx log analyzer.
-
-So far the following metrics are collected:
-
-#### Page visits
-- Top 10 moments that have highest page visits
-- Top 10 pages that are visited most frequently
-
-#### Traffic and rate
-- Top 10 moments that have highest traffic
-- Top 10 moments that have fastest rate
-- Top 10 urls that have largest total resonse size
-- Top 10 urls that have largest average response size
-
-#### Response time
-- List top 10 urls that takes longest response time in total
-- List top 10 urls that takes longest response time in average
-
-#### Upstream servers
-- Show busiest and slowest upstream servers
-
-#### Ip addresses
-- Count of unique ip addresses; Top 10 ip addresses that visits most frequently
-
-#### Response code
-- Statistics of HTTP response codes
-
-#### Slow requests
-- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
+Nana is an Nginx log analyzer helping to identify performance bottlenecks. It's written in shell and awk, aiming to be the best Nginx log analyzer.
 
 # Usages
 Nana provides a list of available commands with usage:
 
     n<command>.sh [options] <logfile>
 
-Where 'logfile' is the absolute location of nginx log file;
+Where 'logfile' is the location of nginx log file;
 
 #### Page visits
-`npv.sh [options] <logfile>`
+`npv.sh <logfile>`
+Example output:
 
-Options: 
-- -n: Number of busiest moments to show, default 10.
+    Page Visits Summary:
+      total 1080577, average 14.0963/s
+      peak 182/s at 10/Apr/2016:12:53:20
+      max count 218133 of url /api/a.json
+    [Busiest Moments By Seconds]
+    Page Visits \t Response Size \t Time Spent/req \t Moment \t
+    3270 3702KB 0.200978 10/Apr/2016:12:00
+    2602 6094.8KB 0.15854 10/Apr/2016:16:47
+    [Busiest Urls]
+    Page Visits \t Page Size/req \t url \t
+    218133 0.334938KB /page/a
+    85953 0.0575728KB /api/a.json
 
-`nana.sh <options> logfile`
+#### Traffic and rate
+`ntr.sh <logfile>`
+Example output:
 
-Where 'logfile' is the absolute location of nginx log file;
+    Traffic and Rate Summary:
+      total traffic 2317.06MB, average traffic 2.19574KB/req
+      average rate 14.827KB/s, peak rate 21961.9KB/s at [10/Apr/2016:20:34:37
+      average response time 0.148091s/req
 
-For example: 
-`nana.sh /var/log/nginx/main.log`
+    [Traffic by Seconds]
+    Traffic      Rate    Moment
+    3463.64KB 19.5084KB/s [10/Apr/2016:12:53:17
+    3419.21KB 5.13934KB/s [10/Apr/2016:12:53:20
 
-#### Example output: 
+    [Response Size by Urls]
+    Traffic      Traffic/req     requests count      url
+    372.365MB 8.51443KB/req 44783 /page/a
+    126.335MB 3.04758KB/req 42449 /api/a/*
 
-    ---------nginx summary---------  
-    page visits(-p for detail):
-        total 888510, average 43.7022/s  
-        peak 1421/s at [13/Apr/2016:10:47:23  
-        max count 203192 of url ***  
-    traffic and rate(-r for detail):  
-        total traffic 1903.55MB, average traffic 2.19383KB/req  
-        highest traffic 292.069MB of url ***  
-        average rate 147.204KB/s  
-        max rate 9254.88KB/s at [13/Apr/2016:15:17:45  
-    response time(-t for detail):  
-        total 132412.7s, average 0.149033s/req  
-        max total time 12224.93s of url ***  
-        slowest response time 12.266s/req of url ***  
-        slowest response time 4.50s/req at [13/Apr/2016:09:35:20  
-    response code(-c for detail):
-        OK:  82951 out of 94218
-        3XX: 10845
-        4XX: 421
-        5XX: 0
-    slow queries(-s for detail):    
-        total requests 145263, slow requests 208, percentage 0.143189%    
-    upstream servers(-u for detail):
-        upstream server count 3
-        Busiest server "XX.XX.XX.XX:XXX" with 440100 requests
-        Slowest server "XX.XX.XX.XX:XXX" with average response time 0.705s
-    ip addresses(-i for detail):  
-        unique ip addresses count 33413  
-        max requests 4689 from ip ***
+    [Response time by Url]
+    Total Time   Response Time/req   requests count      url
+    393.592min 12.8345s/req 1840 /page/a
+    132.288min 0.186984s/req 42449 /api/a/*
 
-#### Options
-Add options to see details
-* -c: show reponse code statistics
-* -h: show help message
-* -i: show ip addresses statistics
-* -p: show page visits detail
-* -r: show traffic and rate details
-* -s: identify and classify slow queries
-* -t: show response time details
-* -u: show upstream server statistics
+#### Spiders
+`nspider.sh <logfile>`
+Example output:
 
-#### Example output with option -t: 
+    14872 Googlebot/2.1;
+    12327 spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)"
+    1960  Baiduspider/2.0;
 
-    ---------Reponse Time Details---------
-    [Total response time by Url]
-    Total Time \t Response Time/req \t requests count \t url
-    1943.22s 0.0955697s 20333 /api/url1
-    1010.53s 0.495357s 2040 /api/url2
-    ...
+#### Upstream servers
+`nbalance.sh <logfile>`
+Example output:
 
-    [Average response time by Url]
-    Response Time/req \t Total Time \t requests count \t url
-    2.871s 28.71s 10 /api/url3
-    2.8541s 2.8541s 1 /api/url4
-    ...
-    ---------End of Reponse Time Details---------
+    665213 67.1366% 113.35ms server1
+    245321 24.759% 58.2047ms server2
 
+
+#### Response code
+`ncode.sh <logfile>`
+Example output:
+
+    Response Code Summary:
+      OK:  981405 out of 1080577
+      3XX: 92260
+      4XX: 6808
+      5XX: 74
+
+    [3XX]
+    Requests count   url
+    20310 /page/a.html
+    14113 /page/b.html
+
+    [4XX]
+    Requests count   url
+    1228 /page/c.html
+    552 /page/d.html
+
+    [5XX]
+    Requests count   url
+    18 /page/e.html
+    11 /page/f.html
+
+#### Slow requests
+- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
+`nslow.sh <logfile>`
+Options:
+
+    -l: time limit, with a default value of 2
+    -v: invert match, only show lines that not match specified patterns
+
+Example output: 
+
+    3.049s 0B [104.236.48.XX] [08/Jun/2016:03:54:32] /page/a
+    3.550s 12B [10.45.41.XX] [08/Jun/2016:04:00:07] /api/b
 
 # FAQ
-#### 1. How to identify requests that are really slow?
-In general there are 3 types of slow requests:
-1. Slow reponse from upstream servers;
-2. Limited bandwith of physical servers;
-3. Poor network condition of mobile phones.
 
-From data of my site, **about 0.5% requests** are slow because of poor network condition, which should be avoided from alerting. This tool identifies a request as slow only if 8 out of 10 succedding requests are slow.
-
-#### 2. Print nothing?
+#### 1. Print nothing?
 Please check log_format of http module in your nginx configurations file(/etc/nginx/nginx.conf), which should be in the following format:
 
     $remote_addr - $remote_user [$time_local] "$request" $status  $body_bytes_sent $request_time $upstream_response_time $upstream_addr "$http_referer" "$http_user_agent" "$http_x_forwarded_for"';
@@ -135,11 +122,8 @@ You could use awk to check whether it works:
     less /var/log/ngin/main.log | awk '{print $11}' | head -n 1 // should print request time  
     less /var/log/ngin/main.log | awk '{print $13}' | head -n 1 // should print upstream server address
 
+#### 2. sed: illegal option -- r?
+Extended regular expression is used in shell scripts, if you encounter such an error, please check to use correct option, such as '-r' in Unix and '-E' in mac.
+
 # TODO List
-- [x] page visits
-- [x] traffic and rate
-- [x] response time statistics
-- [x] response code(5**/4**/3**)
-- [x] Identify and classify slow requests(Slow upstream servers; bandwith limit; poor network condition)
-- [ ] Show crawlers statistics (google bot, baidu spider, bingbot, MJ12bot, YandexBot, Sogou web spider/)
-- [ ] Show market shares of various mobile phones(iphone/android/win phone...); and portions of versions(iPhone 5, 6, 7, 8, 9)/manufactures(Huawei, Samsung, iPhone, Nexus, Letv, HTC, vivo, Xiaomi)
+- [ ] Show percentage of mobile devices (iphone/android/win phone...) and manufactures(Huawei, Samsung, iPhone, Nexus, Letv, HTC, vivo, Xiaomi)

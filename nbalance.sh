@@ -43,5 +43,5 @@ fi
 echo ""
 echo "[Busiest]"
 echo "Request Count/ Percentage/ Response Time/req \t upstream server"
-less $file | awk '{upServer=$13;upTime=$12;if(upServer == "-"){upServer="Nginx"};if(upTime == "-"){upTime=0};upTimes[upServer]+=upTime;count[upServer]++;totalCount++;} END{for(server in upTimes){printf("%s %s%s %ss %s\n", count[server], count[server]/totalCount * 100, "%", upTimes[server]/count[server], server)}}' | sort -nr
+less $file | awk '{upServer=$13;upTime=$12;if(upServer == "-"){upServer="Nginx"};if(upTime == "-"){upTime=0};upTimes[upServer]+=upTime;count[upServer]++;totalCount++;} END{for(server in upTimes){printf("%s %s%s %sms %s\n", count[server], count[server]/totalCount * 100, "%", 1000*upTimes[server]/count[server], server)}}' | sort -nr
 
