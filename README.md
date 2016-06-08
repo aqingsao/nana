@@ -10,6 +10,7 @@ Where 'logfile' is the location of nginx log file;
 
 #### Page visits
 `npv.sh <logfile>`
+
 Example output:
 
     Page Visits Summary:
@@ -27,6 +28,7 @@ Example output:
 
 #### Traffic and rate
 `ntr.sh <logfile>`
+
 Example output:
 
     Traffic and Rate Summary:
@@ -51,6 +53,7 @@ Example output:
 
 #### Spiders
 `nspider.sh <logfile>`
+
 Example output:
 
     14872 Googlebot/2.1;
@@ -59,6 +62,7 @@ Example output:
 
 #### Upstream servers
 `nbalance.sh <logfile>`
+
 Example output:
 
     665213 67.1366% 113.35ms server1
@@ -67,6 +71,7 @@ Example output:
 
 #### Response code
 `ncode.sh <logfile>`
+
 Example output:
 
     Response Code Summary:
@@ -91,8 +96,8 @@ Example output:
     11 /page/f.html
 
 #### Slow requests
-- List slow requests, avoiding mistakes caused by poor network conditions of mobile phones.
 `nslow.sh <logfile>`
+
 Options:
 
     -l: time limit, with a default value of 2
