@@ -1,10 +1,10 @@
 # About nana
-Nana is an Nginx log analyzer helping to identify performance bottlenecks. It's written in shell and awk, aiming to be the best Nginx log analyzer.
+Nana is a lightweight Nginx log analyzer, helping to collect performance metrics and identify performance bottlenecks. It's written in pure shell scripts without dependency of additional libraries.
 
 # Usages
 Nana provides a list of available commands with usage:
 
-    n<command>.sh [options] <logfile>
+    <command>.sh [options] <logfile>
 
 Where 'logfile' is the location of nginx log file;
 
