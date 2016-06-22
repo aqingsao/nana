@@ -51,14 +51,30 @@ Example output:
     393.592min 12.8345s/req 1840 /page/a
     132.288min 0.186984s/req 42449 /api/a/*
 
-#### Spiders
-`nspider.sh <logfile>`
+#### Agents
+`nagent.sh <logfile>`
 
 Example output:
 
-    14872 Googlebot/2.1;
-    12327 spider/4.0(+http://www.sogou.com/docs/help/webmasters.htm#07)"
-    1960  Baiduspider/2.0;
+    Total: 17995
+    iPhone: 9332 0.518588
+    Android: 5249 0.291692
+    spider: 655 0.036399
+    iPad: 174 0.00966935
+    Windows: 1453 0.0807447
+    Mac: 41 0.00227841
+
+    [Spider Details]
+    365 Googlebot/2.1;
+    81 Baiduspider/2.0;
+
+    [iPhone Version Details]
+    5465 9_3_2
+    674 8_2
+
+    [Android Version Details]
+    2491 4.4.2;
+    458 6.0;
 
 #### Upstream servers
 `nbalance.sh <logfile>`
